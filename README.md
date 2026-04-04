@@ -14,10 +14,10 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - Database is between everyone who works on this project, so be careful of the code you write that interacts with it
 
 # Setup:
-- Install node v.22 ideally, then run "node -v" to confirm node is installed
+- Install node, ideally v.22, then run "node -v" to confirm node is installed
 - Run "npm install -g pnpm"
-- Clone this repo with git clone {repo url}
-- Run pnpm install while in the root directory of the app
+- Clone this repo with "git clone {repo url}"
+- Run "pnpm install" while in the root directory of the app
 - Create .env.local file in root directory of app and add it to your .gitignore file
 - Ask Bruhshane to give you database environment variables and insert them into .env.local
 - Done
