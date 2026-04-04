@@ -2,6 +2,7 @@
 
 import { inter, grotesk } from '@/app/ui/fonts';
 import { useState } from 'react';
+import { createAccount } from '@/app/lib/actions'
 
 export default function GetStartedPage() {
     const [formData, setFormData] = useState({
@@ -29,82 +30,87 @@ export default function GetStartedPage() {
                         <br />
                         Account
                     </h1>
+                    <form action={createAccount} className="flex flex-col gap-4">
+                        <div className={`${inter.className} flex flex-col gap-1`}>
+                            <label htmlFor="name" className="text-sm text-black">
+                                Name
+                            </label>
+                            <input
+                                id="name"
+                                name = "name"
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => handleInputChange('name', e.target.value)}
+                                className="h-10 w-full border border-black bg-white px-3 text-black"
+                            />
+                        </div>
 
-                    <div className={`${inter.className} flex flex-col gap-1`}>
-                        <label htmlFor="name" className="text-sm text-black">
-                            Name
-                        </label>
-                        <input
-                            id="name"
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => handleInputChange('name', e.target.value)}
-                            className="h-10 w-full border border-black bg-white px-3 text-black"
-                        />
-                    </div>
+                        <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+                            <label htmlFor="email" className="text-sm text-black">
+                                Email
+                            </label>
+                            <input
+                                id="email"
+                                name = "email"
+                                type="text"
+                                value={formData.email}
+                                onChange={(e) => handleInputChange('email', e.target.value)}
+                                className="h-10 w-full border border-black bg-white px-3 text-black"
+                            />
+                        </div>
 
-                    <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
-                        <label htmlFor="email" className="text-sm text-black">
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            type="text"
-                            value={formData.email}
-                            onChange={(e) => handleInputChange('email', e.target.value)}
-                            className="h-10 w-full border border-black bg-white px-3 text-black"
-                        />
-                    </div>
+                        <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+                            <label htmlFor="password" className="text-sm text-black">
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                name = "password"
+                                type="password"
+                                value={formData.password}
+                                onChange={(e) => handleInputChange('password', e.target.value)}
+                                className="h-10 w-full border border-black bg-white px-3 text-black"
+                            />
+                        </div>
 
-                    <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
-                        <label htmlFor="password" className="text-sm text-black">
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            type="text"
-                            value={formData.password}
-                            onChange={(e) => handleInputChange('password', e.target.value)}
-                            className="h-10 w-full border border-black bg-white px-3 text-black"
-                        />
-                    </div>
+                        <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+                            <label htmlFor="role" className="text-sm text-black">
+                                Role
+                            </label>
+                            <select
+                                id="role"
+                                name = "role"
+                                value={formData.role}
+                                onChange={(e) => handleInputChange('role', e.target.value)}
+                                className="h-10 w-28 rounded-md bg-white px-3 text-sm text-gray-500 text-black"
+                            >
+                                <option value="">Value</option>
+                                <option value="manager">Manager</option>
+                                <option value= "employee">Employee</option>
+                            </select>
+                        </div>
 
-                    <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
-                        <label htmlFor="role" className="text-sm text-black">
-                            Role
-                        </label>
-                        <select
-                            id="role"
-                            value={formData.role}
-                            onChange={(e) => handleInputChange('role', e.target.value)}
-                            className="h-10 w-28 rounded-md bg-white px-3 text-sm text-gray-500 text-black"
+                        <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+                            <label htmlFor="organization" className="text-sm text-black">
+                                Organization
+                            </label>
+                            <input
+                                id="organization"
+                                name = "organization"
+                                type="text"
+                                value={formData.organization}
+                                onChange={(e) => handleInputChange('organization', e.target.value)}
+                                className="h-10 w-full border border-black bg-white px-3 text-black"
+                            />
+                        </div>
+                        <button
+                            onClick = {handleSubmit}
+                            type = "submit"
+                            className={`${inter.className} mt-8 w-full bg-purple-500 px-4 py-2 text-white rounded-md`}
                         >
-                            <option value="">Value</option>
-                            <option value="manager">Manager</option>
-                            <option value= "employee">Employee</option>
-                        </select>
-                    </div>
-
-                    <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
-                        <label htmlFor="organization" className="text-sm text-black">
-                            Organization
-                        </label>
-                        <input
-                            id="organization"
-                            type="text"
-                            value={formData.organization}
-                            onChange={(e) => handleInputChange('organization', e.target.value)}
-                            className="h-10 w-full border border-black bg-white px-3 text-black"
-                        />
-                    </div>
-
-                    <button
-                        onClick={handleSubmit}
-                        className={`${inter.className} mt-8 w-full bg-purple-500 px-4 py-2 text-white rounded-md`}
-                    >
-                        Submit
-                    </button>
-
+                            Submit
+                        </button>
+                    </form>
                 </div>
             </div>
         </main>
