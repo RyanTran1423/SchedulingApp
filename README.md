@@ -1,18 +1,3 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
@@ -29,11 +14,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - Database is between everyone who works on this project, so be careful of the code you write that interacts with it
 
 # Setup:
-- Install node v.22 ideally, then run node -v to confirm
-- Run npm install -g pnpm
-- Clone this repo with git clone "repo"
+- Install node v.22 ideally, then run "node -v" to confirm node is installed
+- Run "npm install -g pnpm"
+- Clone this repo with git clone {repo url}
 - Run pnpm install while in the root directory of the app
 - Create .env.local file in root directory of app and add it to your .gitignore file
-- Ask Bruhshane to give you database environment variables
+- Ask Bruhshane to give you database environment variables and insert them into .env.local
 - Done
-
+- To run the website locally: Run "pnpm run dev" to build the app and start the server on local host
+- Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
