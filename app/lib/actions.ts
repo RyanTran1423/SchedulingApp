@@ -2,6 +2,7 @@
 
 import { sql } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
+import { redirect } from 'next/navigation';
 
 export async function createAccount(formData: FormData) {
     const name = formData.get('name') as string;
@@ -30,6 +31,12 @@ export async function createAccount(formData: FormData) {
         INSERT INTO users (name, email, password_hash, role, organization_id)
         VALUES (${name}, ${email}, ${passwordHash}, ${role}, ${organizationId});
     `;
+
+    if (role == 'manager') {
+        redirect('/dashboard/manager');
+    } else {
+        redirect('/dashboard/employee');
+    }
 
     console.log('Account created successfully');
 }

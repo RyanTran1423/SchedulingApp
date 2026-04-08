@@ -1,11 +1,11 @@
-'use client';
+'use client';   // Lets us use hooks
 
 import { inter, grotesk } from '@/app/ui/fonts';
 import { useState } from 'react';
 import { createAccount } from '@/app/lib/actions'
 
 export default function GetStartedPage() {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({      // useState: React hook to let components remember data
         name: '',
         email: '',
         password: '',
