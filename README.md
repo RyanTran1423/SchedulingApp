@@ -23,3 +23,6 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - Done
 - To run the website locally: Run "pnpm run dev" to build the app and start the server on local host
 - Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+# Exercise:
+- Goal: Upon a user entering their login credentials, query the database to see if their account exists. If so, redirect the user to the dashboard based on their role. Else, log an error
