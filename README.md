@@ -26,3 +26,4 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 # Exercise:
 - Goal: Upon a user entering their login credentials, query the database to see if their account exists. If so, redirect the user to the dashboard based on their role. Else, log an error
+- Buh already wrote the frontend for the login page. Just use the flow of the account creation files as an example of how to cleanly implement the backend for the login page.
