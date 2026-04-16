@@ -14,7 +14,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - Database is between everyone who works on this project, so be careful of the code you write that interacts with it
 
 # Setup:
-- Install node, ideally v.22, then run "node -v" to confirm node is installed
+- Install node, ideally v.22, then run "node -v" to confirm node is installed  Note: You prolly have to add the path to node to your environment variables as well if you're on Windows
 - Run "npm install -g pnpm"
 - Clone this repo with "git clone {repo url}"
 - Run "pnpm install" while in the root directory of the app
