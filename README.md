@@ -24,6 +24,6 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - To run the website locally: Run "pnpm run dev" to build the app and start the server on local host
 - Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-# Exercise:
+# Exorcise:
 - Goal: Upon a user entering their login credentials, query the database to see if their account exists. If so, redirect the user to the dashboard based on their role. Else, log an error
 - Buh already wrote the frontend for the login page. Just use the flow of the account creation files as an example of how to cleanly implement the backend for the login page.
