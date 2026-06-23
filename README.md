@@ -14,7 +14,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - Database is between everyone who works on this project, so be careful of the code you write that interacts with it
 
 # Setup:
-- Install node, ideally v.22, then run "node -v" to confirm node is installed
+- Install node, ideally v.22, then run "node -v" to confirm node is installed.  Note: You prolly have to add the path to node to your environment variables as well if you're on Windows
 - Run "npm install -g pnpm"
 - Clone this repo with "git clone {repo url}"
 - Run "pnpm install" while in the root directory of the app
@@ -23,3 +23,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - Done
 - To run the website locally: Run "pnpm run dev" to build the app and start the server on local host
 - Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+# Exorcise:
+- Goal: Upon a user entering their login credentials, query the database to see if their account exists. If so, redirect the user to the dashboard based on their role. Else, log an error
+- Buh already wrote the frontend for the login page. Just use the flow of the account creation files as an example of how to cleanly implement the backend for the login page.
