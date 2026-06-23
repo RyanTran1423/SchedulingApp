@@ -2,11 +2,11 @@
 
 import { inter, grotesk } from '@/app/ui/fonts';
 import { useState } from 'react';
-import { createAccount } from '@/app/lib/actions'
+import { createAccount } from '@/app/lib/accounts/signup'
 
 export default function GetStartedPage() {
     const [formData, setFormData] = useState({      // useState: React hook to let components remember data
-        name: '',
+        name: '',                                   // This is all initial data for the form
         email: '',
         password: '',
         role: '',
@@ -65,7 +65,7 @@ export default function GetStartedPage() {
                             </label>
                             <input
                                 id="password"
-                                name = "password"
+                                name ="password"
                                 type="password"
                                 value={formData.password}
                                 onChange={(e) => handleInputChange('password', e.target.value)}
