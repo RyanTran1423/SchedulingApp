@@ -1,7 +1,8 @@
 export default function EmployeeDashboardPage() {
-    return(
-    <main>
-        <h1 className="text-3xl font-bold">EmployeeDashboardPage</h1>
-    </main>
-    );
+  return (
+    <section>
+      <h1 className="text-3xl font-bold text-black">Employee Dashboard</h1>
+      <p className="mt-2 text-gray-600">Welcome back.</p>
+    </section>
+  );
 }
