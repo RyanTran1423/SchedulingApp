@@ -50,9 +50,11 @@ export default function Sidebar({ role, userName }: SidebarProps) {
       {/* TOP SECTION */}
       <div className="mb-8 flex items-center justify-between w-full shrink-0">
         <div>
-          <h1 className="text-xl font-bold text-black">Welcome</h1>
-          <p className="text-sm capitalize text-gray-500">{role}</p>
-        </div>
+  <h1 className="text-xl font-bold text-black">
+    Welcome, {userName}
+  </h1>
+  <p className="text-sm capitalize text-gray-500">{role}</p>
+</div>
 
         {/* ✅ PROFILE BUTTON */}
         <Link href={`/dashboard/${role}/profile`}>
