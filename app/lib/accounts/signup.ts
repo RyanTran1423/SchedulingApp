@@ -3,6 +3,7 @@
 import { sql } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 function isValidEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -10,57 +11,84 @@ function isValidEmail(email: string) {
 }
 
 export async function createAccount(formData: FormData) {
-    const name = formData.get('name') as string;
-    const email = formData.get('email')?.toString().trim().toLowerCase();
-    const password = formData.get('password') as string;
-    const role = formData.get('role') as string;
-    const organizationName = formData.get('organization') as string;
+  const name = formData.get('name')?.toString().trim();
+  const email = formData.get('email')?.toString().trim().toLowerCase();
+  const password = formData.get('password')?.toString();
+  const role = formData.get('role')?.toString();
+  const organizationName = formData.get('organization')?.toString().trim();
 
-    if (!name || !email || !password || !role || !organizationName) {
-        throw new Error('All fields are required');
+  if (!name || !email || !password || !role || !organizationName) {
+    throw new Error('All fields are required');
+  }
+
+  if (!isValidEmail(email)) {
+    throw new Error('Please enter a valid email address');
+  }
+
+  if (password.length < 8) {
+    throw new Error('Password must be at least 8 characters long');
+  }
+
+  if (role !== 'manager' && role !== 'employee') {
+    throw new Error('Invalid role');
+  }
+
+  const existingUser = await sql`
+    SELECT id
+    FROM users
+    WHERE LOWER(email) = ${email}
+    LIMIT 1;
+  `;
+
+  if (existingUser.length > 0) {
+    throw new Error('An account with this email already exists');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const orgResult = await sql`
+    INSERT INTO organizations (name)
+    VALUES (${organizationName})
+    ON CONFLICT (name)
+    DO UPDATE SET name = EXCLUDED.name
+    RETURNING id;
+  `;
+
+  const organizationId = orgResult[0].id as number;
+
+  const userResult = await sql`
+    INSERT INTO users (name, email, password_hash, role, organization_id)
+    VALUES (${name}, ${email}, ${passwordHash}, ${role}, ${organizationId})
+    RETURNING id, name, role;
+  `;
+
+  const newUser = userResult[0] as {
+    id: number;
+    name: string;
+    role: 'manager' | 'employee';
+  };
+
+  const cookieStore = await cookies();
+
+  cookieStore.set(
+    'user',
+    JSON.stringify({
+      id: newUser.id,
+      name: newUser.name,
+      role: newUser.role,
+    }),
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
     }
+  );
 
-    if(!isValidEmail(email)) {
-        throw new Error('Please enter a valid email address')
-    }
+  if (newUser.role === 'manager') {
+    redirect('/dashboard/manager');
+  }
 
-    if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long');
-    }
-
-    const existingUser = await sql`
-        SELECT id
-        FROM users
-        WHERE LOWER(email) = ${email}
-        LIMIT 1;
-    `;
-
-    if (existingUser.length > 0) {
-        throw new Error('An account with this email already exists');
-    }
-
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const orgResult = await sql `
-        INSERT INTO organizations (name)
-        VALUES (${organizationName})
-        ON CONFLICT (name)
-        DO UPDATE SET name = EXCLUDED.name
-        RETURNING id;
-    `;
-
-    const organizationId = orgResult[0].id; // Extract id from first row in query result and store it in organizationId
-
-    await sql `
-        INSERT INTO users (name, email, password_hash, role, organization_id)
-        VALUES (${name}, ${email}, ${passwordHash}, ${role}, ${organizationId});
-    `;
-
-    if (role == 'manager') {
-        redirect('/dashboard/manager');
-    } else {
-        redirect('/dashboard/employee');
-    }
-
-    console.log('Account created successfully');
+  redirect('/dashboard/employee');
 }

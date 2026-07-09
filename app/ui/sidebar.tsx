@@ -8,9 +8,10 @@ type SidebarRole = 'employee' | 'manager';
 
 type SidebarProps = {
   role: SidebarRole;
+  userName: string;
 };
 
-export default function Sidebar({ role }: SidebarProps) {
+export default function Sidebar({ role, userName }: SidebarProps) {
   const pathname = usePathname();
 
   const basePath = `/dashboard/${role}`;
@@ -44,10 +45,25 @@ export default function Sidebar({ role }: SidebarProps) {
   };
 
   return (
-    <aside className="flex min-h-screen w-64 flex-col border-r border-gray-300 bg-white px-4 py-6">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold text-black">Scheduler</h1>
-        <p className="text-sm capitalize text-gray-500">{role}</p>
+    <aside className="flex min-h-screen w-80 flex-col border-r border-gray-300 bg-white px-4 py-6">
+      
+      {/* TOP SECTION */}
+      <div className="mb-8 flex items-center justify-between w-full shrink-0">
+        <div>
+  <h1 className="text-xl font-bold text-black">
+    Welcome, {userName}
+  </h1>
+  <p className="text-sm capitalize text-gray-500">{role}</p>
+</div>
+
+        {/* ✅ PROFILE BUTTON */}
+        <Link href={`/dashboard/${role}/profile`}>
+          <div className="h-10 w-10 rounded-full bg-gray-400 hover:bg-gray-500 transition cursor-pointer flex items-center justify-center text-white font-semibold">
+            {userName
+  ? userName.charAt(0).toUpperCase()
+  : 'P'}
+          </div>
+        </Link>
       </div>
 
       <nav className="flex flex-1 flex-col justify-between">
