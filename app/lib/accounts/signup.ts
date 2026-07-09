@@ -4,15 +4,39 @@ import { sql } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 
+function isValidEmail(email: string) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 export async function createAccount(formData: FormData) {
     const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
+    const email = formData.get('email')?.toString().trim().toLowerCase();
     const password = formData.get('password') as string;
     const role = formData.get('role') as string;
     const organizationName = formData.get('organization') as string;
 
     if (!name || !email || !password || !role || !organizationName) {
         throw new Error('All fields are required');
+    }
+
+    if(!isValidEmail(email)) {
+        throw new Error('Please enter a valid email address')
+    }
+
+    if (password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+    }
+
+    const existingUser = await sql`
+        SELECT id
+        FROM users
+        WHERE LOWER(email) = ${email}
+        LIMIT 1;
+    `;
+
+    if (existingUser.length > 0) {
+        throw new Error('An account with this email already exists');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
