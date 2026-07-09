@@ -13,8 +13,6 @@ export default function GetStartedPage() {
     organization: '',
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
@@ -68,18 +66,11 @@ export default function GetStartedPage() {
               <input
                 id="password"
                 name="password"
-                type={showPassword ? 'text' : 'password'}
+                type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className="h-10 w-full border border-black bg-white px-3 text-black"
               />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-145 top-[68%] -translate-y-1/2 text-sm text-purple-500 hover:text-purple-700 cursor-pointer"
-              >
-                {showPassword ? 'Hide' : 'Show'} Password
-              </button>
             </div>
 
             <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
