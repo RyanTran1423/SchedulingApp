@@ -25,7 +25,7 @@ export async function login(formData: FormData) {
     name: string;
     email: string;
     password_hash: string;
-    role: string;
+    role: 'manager' | 'employee';
     organization_id: number;
   } | undefined;
 
@@ -39,7 +39,7 @@ export async function login(formData: FormData) {
   );
 
   if (!isValidPassword) {
-    throw new Error('Invalid password');
+    throw new Error('Invalid email or password');
   }
 
   const cookieStore = await cookies();
@@ -54,6 +54,7 @@ export async function login(formData: FormData) {
     {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     }
@@ -61,7 +62,7 @@ export async function login(formData: FormData) {
 
   if (user.role === 'manager') {
     redirect('/dashboard/manager');
-  } else {
-    redirect('/dashboard/employee');
   }
+
+  redirect('/dashboard/employee');
 }
