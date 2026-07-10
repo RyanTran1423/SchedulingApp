@@ -22,6 +22,7 @@ export default function Sidebar({ role, userName }: SidebarProps) {
           { name: 'Dashboard', href: basePath },
           { name: 'Messages', href: `${basePath}/messages` },
           { name: 'Manage Employees', href: `${basePath}/manage-employees` },
+          { name: 'Set Org Roles', href: `${basePath}/set-org-roles` },
         ]
       : [
           { name: 'Dashboard', href: basePath },
