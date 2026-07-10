@@ -1,10 +1,11 @@
-// app/lib/roles/org-role-actions.ts
-
 'use server';
 
 import { sql } from '@/app/lib/db';
 import { revalidatePath } from 'next/cache';
+
 import { requireManager } from '@/app/lib/utils/auth/require-manager';
+import { isValidOrganizationRoleName } from '@/app/lib/utils/validation';
+
 
 type RoleActionState = {
   error?: string;
@@ -20,7 +21,7 @@ export async function createOrganizationRole(
   const name = formData.get('name')?.toString().trim();
   const description = formData.get('description')?.toString().trim();
 
-  if (!name) {
+  if (!isValidOrganizationRoleName(name)) {
     return {
       error: 'Role name is required.',
     };
