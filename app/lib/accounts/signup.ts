@@ -1,6 +1,7 @@
 'use server';
 
-import { sql } from '@/app/lib/db';
+import { createUser, findUserByEmail } from '@/app/lib/repos/users';
+import { createOrGetOrganization } from '@/app/lib/repos/organizations';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 import { setUserCookie } from '@/app/lib/utils/cookie';
@@ -33,40 +34,22 @@ export async function createAccount(formData: FormData) {
     throw new Error('Invalid role');
   }
 
-  const existingUser = await sql`
-    SELECT id
-    FROM users
-    WHERE LOWER(email) = ${email}
-    LIMIT 1;
-  `;
+  const existingUser = await findUserByEmail(email);
 
-  if (existingUser.length > 0) {
+  if (existingUser) {
     throw new Error('An account with this email already exists');
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
+  const organizationId = await createOrGetOrganization(organizationName);
 
-  const orgResult = await sql`
-    INSERT INTO organizations (name)
-    VALUES (${organizationName})
-    ON CONFLICT (name)
-    DO UPDATE SET name = EXCLUDED.name
-    RETURNING id;
-  `;
-
-  const organizationId = orgResult[0].id as number;
-
-  const userResult = await sql`
-    INSERT INTO users (name, email, password_hash, role, organization_id)
-    VALUES (${name}, ${email}, ${passwordHash}, ${role}, ${organizationId})
-    RETURNING id, name, role;
-  `;
-
-  const newUser = userResult[0] as {
-    id: number;
-    name: string;
-    role: 'manager' | 'employee';
-  };
+  const newUser = await createUser({
+    name,
+    email,
+    passwordHash,
+    role: role as 'manager' | 'employee',
+    organizationId,
+  });
 
   await setUserCookie({
     id: newUser.id,
