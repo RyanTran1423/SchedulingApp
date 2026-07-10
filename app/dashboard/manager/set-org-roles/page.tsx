@@ -1,5 +1,5 @@
 import { sql } from '@/app/lib/db';
-import { requireManager } from '@/app/lib/auth/require-manager';
+import { requireManager } from '@/app/lib/utils/auth/require-manager';
 import { deleteOrganizationRole } from '@/app/lib/roles/org-role-actions';
 import CreateOrgRoleForm from './create-org-role-form';
 
