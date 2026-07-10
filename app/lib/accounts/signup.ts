@@ -5,6 +5,7 @@ import { createOrGetOrganization } from '@/app/lib/repos/organizations';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 import { setUserCookie } from '@/app/lib/utils/cookie';
+import { BCRYPT_SALT_ROUNDS, PASSWORD_MIN_LENGTH } from '@/app/lib/constants';
 
 function isValidEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,7 +27,7 @@ export async function createAccount(formData: FormData) {
     throw new Error('Please enter a valid email address');
   }
 
-  if (password.length < 8) {
+  if (password.length < PASSWORD_MIN_LENGTH) {
     throw new Error('Password must be at least 8 characters long');
   }
 
@@ -40,7 +41,7 @@ export async function createAccount(formData: FormData) {
     throw new Error('An account with this email already exists');
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
   const organizationId = await createOrGetOrganization(organizationName);
 
   const newUser = await createUser({
