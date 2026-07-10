@@ -56,7 +56,7 @@ export default function LogInPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-185 top-[59%] -translate-y-1/2 text-sm text-purple-500 hover:text-purple-700 cursor-pointer"
+                className="mt-2 self-end text-sm text-purple-500 hover:text-purple-700 cursor-pointer"
               >
                 {showPassword ? 'Hide' : 'Show'} Password
               </button>
