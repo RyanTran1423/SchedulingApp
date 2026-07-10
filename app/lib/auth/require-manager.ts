@@ -1,13 +1,25 @@
 import { redirect } from 'next/navigation';
 import { sql } from '@/app/lib/db';
-import { getUser } from '@/app/lib/accounts/get-user';
+import { requireUserFromCookie } from '@/app/lib/utils/cookie';
 
-export async function requireManager() {
-  const cookieUser = await getUser();
+type ManagerUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: 'manager';
+  organization_id: number;
+};
 
-  if (!cookieUser) {
-    redirect('/login');
-  }
+type DbUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  organization_id: number;
+};
+
+export async function requireManager(): Promise<ManagerUser> {
+  const cookieUser = await requireUserFromCookie();
 
   const result = await sql`
     SELECT id, name, email, role, organization_id
@@ -16,15 +28,7 @@ export async function requireManager() {
     LIMIT 1;
   `;
 
-  const user = result[0] as
-    | {
-        id: number;
-        name: string;
-        email: string;
-        role: string;
-        organization_id: number;
-      }
-    | undefined;
+  const user = result[0] as DbUser | undefined;
 
   if (!user) {
     redirect('/login');
@@ -34,5 +38,11 @@ export async function requireManager() {
     redirect('/dashboard/employee');
   }
 
-  return user;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: 'manager',
+    organization_id: user.organization_id,
+  };
 }
