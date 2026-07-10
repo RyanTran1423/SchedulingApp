@@ -3,7 +3,7 @@
 import { sql } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { setUserCookie } from '@/app/lib/utils/cookie';
 
 function isValidEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,23 +68,11 @@ export async function createAccount(formData: FormData) {
     role: 'manager' | 'employee';
   };
 
-  const cookieStore = await cookies();
-
-  cookieStore.set(
-    'user',
-    JSON.stringify({
-      id: newUser.id,
-      name: newUser.name,
-      role: newUser.role,
-    }),
-    {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    }
-  );
+  await setUserCookie({
+    id: newUser.id,
+    name: newUser.name,
+    role: newUser.role,
+  });
 
   if (newUser.role === 'manager') {
     redirect('/dashboard/manager');
