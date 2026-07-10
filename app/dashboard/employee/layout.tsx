@@ -1,22 +1,12 @@
 import Sidebar from '@/app/ui/sidebar';
-import { getUser } from '@/app/lib/accounts/get-user';
-import { redirect } from 'next/navigation';
+import { requireRoleFromCookie } from '@/app/lib/utils/cookie';
 
 export default async function EmployeeDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  if (user.role !== 'employee') {
-    redirect('/login');
-    // Or redirect('/dashboard/manager') if you want managers sent back to manager dashboard
-  }
+  const user = await requireRoleFromCookie('employee');
 
   return (
     <div className="flex min-h-screen bg-[#f3f3f3]">
