@@ -1,11 +1,16 @@
+// This file works with organization_roles and user_organization_roles tables. It's a server action file.
+// Server action: Receives request from UI and coordinates everything to complete that request
+
 'use server';
 
-import { sql } from '@/app/lib/db';
 import { revalidatePath } from 'next/cache';
-
+import {
+  createOrganizationRoleRecord,
+  deleteOrganizationRoleRecord,
+  findOrganizationRoleByName,
+} from '@/app/lib/repos/org-roles';
 import { requireManager } from '@/app/lib/utils/auth/require-manager';
 import { isValidOrganizationRoleName } from '@/app/lib/utils/validation';
-
 
 type RoleActionState = {
   error?: string;
@@ -14,7 +19,7 @@ type RoleActionState = {
 
 export async function createOrganizationRole(
   previousState: RoleActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<RoleActionState> {
   const manager = await requireManager();
 
@@ -27,24 +32,22 @@ export async function createOrganizationRole(
     };
   }
 
-  const existingRole = await sql`
-    SELECT id
-    FROM organization_roles
-    WHERE organization_id = ${manager.organization_id}
-    AND LOWER(name) = LOWER(${name})
-    LIMIT 1;
-  `;
+  const existingRole = await findOrganizationRoleByName(
+    manager.organization_id,
+    name,
+  );
 
-  if (existingRole.length > 0) {
+  if (existingRole) {
     return {
       error: 'That role already exists.',
     };
   }
 
-  await sql`
-    INSERT INTO organization_roles (organization_id, name, description)
-    VALUES (${manager.organization_id}, ${name}, ${description || null});
-  `;
+  await createOrganizationRoleRecord(
+    manager.organization_id,
+    name,
+    description,
+  );
 
   revalidatePath('/dashboard/manager/set-org-roles');
 
@@ -55,23 +58,22 @@ export async function createOrganizationRole(
 
 export async function deleteOrganizationRole(formData: FormData) {
   const manager = await requireManager();
-
   const roleId = Number(formData.get('roleId'));
 
-  if (!roleId) {
-    throw new Error('Role id is required.');
+  if (!Number.isInteger(roleId) || roleId <= 0) {
+    throw new Error('A valid role id is required.');
   }
 
-  await sql`
-    DELETE FROM user_organization_roles
-    WHERE organization_role_id = ${roleId};
-  `;
+  const deleted = await deleteOrganizationRoleRecord(
+    manager.organization_id,
+    roleId,
+  );
 
-  await sql`
-    DELETE FROM organization_roles
-    WHERE id = ${roleId}
-    AND organization_id = ${manager.organization_id};
-  `;
+  if (!deleted) {
+    throw new Error(
+      'The role was not found or does not belong to your organization.',
+    );
+  }
 
   revalidatePath('/dashboard/manager/set-org-roles');
 }

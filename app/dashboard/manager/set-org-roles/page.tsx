@@ -1,4 +1,4 @@
-import { sql } from '@/app/lib/db';
+import { findOrganizationRoles } from '@/app/lib/repos/org-roles';
 import { requireManager } from '@/app/lib/utils/auth/require-manager';
 import { deleteOrganizationRole } from '@/app/lib/roles/org-role-actions';
 import CreateOrgRoleForm from './create-org-role-form';
@@ -6,12 +6,7 @@ import CreateOrgRoleForm from './create-org-role-form';
 export default async function SetOrgRolesPage() {
   const manager = await requireManager();
 
-  const roles = await sql`
-    SELECT id, name, description
-    FROM organization_roles
-    WHERE organization_id = ${manager.organization_id}
-    ORDER BY name ASC;
-  `;
+  const roles = await findOrganizationRoles(manager.organization_id);
 
   return (
     <section>
@@ -40,7 +35,7 @@ export default async function SetOrgRolesPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {roles.map((role: any) => (
+              {roles.map((role) => (
                 <div
                   key={role.id}
                   className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4"
