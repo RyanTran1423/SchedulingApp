@@ -76,13 +76,13 @@ export default function GetStartedPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-185 top-[61%] -translate-y-1/2 text-sm text-purple-500 hover:text-purple-700 cursor-pointer"
+                className="mt-2 self-end text-sm text-purple-500 hover:text-purple-700 cursor-pointer"
               >
                 {showPassword ? 'Hide' : 'Show'} Password
               </button>
             </div>
 
-            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+            <div className={`${inter.className} mt-2 flex flex-col gap-1`}>
               <label htmlFor="role" className="text-sm text-black">
                 Role
               </label>
@@ -100,7 +100,7 @@ export default function GetStartedPage() {
               </select>
             </div>
 
-            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+            <div className={`${inter.className} mt-2 flex flex-col gap-1`}>
               <label htmlFor="organization" className="text-sm text-black">
                 Organization
               </label>
@@ -117,7 +117,7 @@ export default function GetStartedPage() {
 
             <button
               type="submit"
-              className={`${inter.className} mt-8 w-full rounded-md bg-purple-500 px-4 py-2 text-white`}
+              className={`${inter.className} mt-7 w-full rounded-md bg-purple-500 px-4 py-2 text-white`}
             >
               Submit
             </button>

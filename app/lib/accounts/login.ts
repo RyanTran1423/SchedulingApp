@@ -3,7 +3,7 @@
 import { sql } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { setUserCookie } from '@/app/lib/utils/cookie';
 
 export async function login(formData: FormData) {
   const email = formData.get('email')?.toString().trim().toLowerCase();
@@ -42,23 +42,15 @@ export async function login(formData: FormData) {
     throw new Error('Invalid email or password');
   }
 
-  const cookieStore = await cookies();
+  if (user.role !== 'manager' && user.role !== 'employee') {
+    throw new Error('Invalid user role');
+  }
 
-  cookieStore.set(
-    'user',
-    JSON.stringify({
-      id: user.id,
-      name: user.name,
-      role: user.role,
-    }),
-    {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    }
-  );
+  await setUserCookie({
+    id: user.id,
+    name: user.name,
+    role: user.role,
+  });
 
   if (user.role === 'manager') {
     redirect('/dashboard/manager');
