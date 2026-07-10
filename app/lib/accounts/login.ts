@@ -1,6 +1,6 @@
 'use server';
 
-import { sql } from '@/app/lib/db';
+import { findUserByEmail } from '@/app/lib/repos/users';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 import { setUserCookie } from '@/app/lib/utils/cookie';
@@ -13,21 +13,7 @@ export async function login(formData: FormData) {
     throw new Error('All fields are required');
   }
 
-  const result = await sql`
-    SELECT id, name, email, password_hash, role, organization_id
-    FROM users
-    WHERE LOWER(email) = ${email}
-    LIMIT 1
-  `;
-
-  const user = result[0] as {
-    id: number;
-    name: string;
-    email: string;
-    password_hash: string;
-    role: 'manager' | 'employee';
-    organization_id: number;
-  } | undefined;
+  const user = await findUserByEmail(email);
 
   if (!user) {
     throw new Error('Invalid email or password');
