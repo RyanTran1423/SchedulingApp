@@ -2,8 +2,10 @@
 
 import { sql } from '@/app/lib/db';
 import { revalidatePath } from 'next/cache';
-import { requireManager } from '@/app/lib/auth/require-manager';
+
+import { requireManager } from '@/app/lib/utils/auth/require-manager';
 import { isValidOrganizationRoleName } from '@/app/lib/utils/validation';
+
 
 type RoleActionState = {
   error?: string;
