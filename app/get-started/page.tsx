@@ -82,7 +82,7 @@ export default function GetStartedPage() {
               </button>
             </div>
 
-            <div className={`${inter.className} mt-2 flex flex-col gap-1`}>
+            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
               <label htmlFor="role" className="text-sm text-black">
                 Role
               </label>
@@ -100,7 +100,7 @@ export default function GetStartedPage() {
               </select>
             </div>
 
-            <div className={`${inter.className} mt-2 flex flex-col gap-1`}>
+            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
               <label htmlFor="organization" className="text-sm text-black">
                 Organization
               </label>
