@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import {
   type AvailabilityWindowInput,
   replaceWeeklyAvailability,
-} from '@/app/lib/repos/employee-preferred-availability';
+} from '@/app/lib/repos/employee-availability';
 import { requireRoleFromCookie } from '@/app/lib/utils/cookie';
 
 export type EmployeeAvailabilityActionState = {
