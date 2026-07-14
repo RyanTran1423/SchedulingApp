@@ -2,6 +2,7 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { COOKIE_OPTIONS, USER_COOKIE_NAME, COOKIE_MAX_AGE } from '@/app/lib/constants/cookie-constants';
 
 export type UserRole = 'manager' | 'employee';
 
@@ -11,16 +12,14 @@ export type UserSession = {
   role: UserRole;
 };
 
-const USER_COOKIE_NAME = 'user';
 
-const USER_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
 function getUserCookieOptions() {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
-    maxAge: USER_COOKIE_MAX_AGE,
+    maxAge: COOKIE_MAX_AGE,
     path: '/',
   };
 }
@@ -45,7 +44,7 @@ export async function setUserCookie(user: UserSession) {
   cookieStore.set(
     USER_COOKIE_NAME,
     JSON.stringify(user),
-    getUserCookieOptions()
+    COOKIE_OPTIONS
   );
 }
 
