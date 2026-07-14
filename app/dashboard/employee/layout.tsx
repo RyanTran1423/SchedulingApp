@@ -1,12 +1,12 @@
 import Sidebar from '@/app/ui/sidebar';
-import { requireRoleFromCookie } from '@/app/lib/utils/cookie';
+import { requireEmployee } from '@/app/lib/utils/auth/require-employee';
 
 export default async function EmployeeDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireRoleFromCookie('employee');
+  const user = await requireEmployee();
 
   return (
     <div className="flex min-h-screen bg-[#f3f3f3]">

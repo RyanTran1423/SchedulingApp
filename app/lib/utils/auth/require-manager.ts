@@ -1,48 +1,65 @@
+import 'server-only';
+
 import { redirect } from 'next/navigation';
 import { sql } from '@/app/lib/db';
-import { requireUserFromCookie } from '@/app/lib/utils/cookie';
+import {
+  assertSameOrganization,
+  requireUser,
+  type AuthenticatedUser,
+} from '@/app/lib/utils/auth/require-user';
 
-type ManagerUser = {
-  id: number;
-  name: string;
-  email: string;
+export type ManagerUser = AuthenticatedUser & {
   role: 'manager';
-  organization_id: number;
 };
 
-type DbUser = {
+type EmployeeOrganizationRecord = {
   id: number;
-  name: string;
-  email: string;
   role: string;
   organization_id: number;
 };
 
 export async function requireManager(): Promise<ManagerUser> {
-  const cookieUser = await requireUserFromCookie();
-
-  const result = await sql`
-    SELECT id, name, email, role, organization_id
-    FROM users
-    WHERE id = ${cookieUser.id}
-    LIMIT 1;
-  `;
-
-  const user = result[0] as DbUser | undefined;
-
-  if (!user) {
-    redirect('/login');
-  }
+  const user = await requireUser();
 
   if (user.role !== 'manager') {
     redirect('/dashboard/employee');
   }
 
   return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
+    ...user,
     role: 'manager',
-    organization_id: user.organization_id,
   };
+}
+
+export async function requireManagerForOrganization(
+  organizationId: number
+): Promise<ManagerUser> {
+  const manager = await requireManager();
+
+  assertSameOrganization(manager, organizationId);
+
+  return manager;
+}
+
+export async function requireManagerCanModifyEmployee(
+  employeeId: number
+): Promise<ManagerUser> {
+  const manager = await requireManager();
+
+  const result = await sql`
+    SELECT id, role, organization_id
+    FROM users
+    WHERE id = ${employeeId}
+    LIMIT 1;
+  `;
+
+  const employee = result[0] as EmployeeOrganizationRecord | undefined;
+
+  if (!employee || employee.role !== 'employee') {
+    throw new Error('Employee record not found.');
+  }
+
+  assertSameOrganization(manager, employee.organization_id);
+
+  return manager;
 }
