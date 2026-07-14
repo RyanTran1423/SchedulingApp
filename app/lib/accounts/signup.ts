@@ -10,6 +10,7 @@ import {
   isValidPassword,
   isValidUserRole,
 } from '@/app/lib/utils/validation';
+import { BCRYPT_SALT_ROUNDS } from '@/app/lib/constants/authentication-constants';
 
 export async function createAccount(formData: FormData) {
   const name = formData.get('name')?.toString().trim();
@@ -40,7 +41,7 @@ export async function createAccount(formData: FormData) {
     throw new Error('An account with this email already exists');
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
   const organizationId = await createOrGetOrganization(organizationName);
 
   const newUser = await createUser({
