@@ -2,7 +2,7 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { COOKIE_OPTIONS, USER_COOKIE_NAME, COOKIE_MAX_AGE } from '@/app/lib/constants';
+import { COOKIE_OPTIONS, USER_COOKIE_NAME, COOKIE_MAX_AGE } from '@/app/lib/constants/cookie-constants';
 
 export type UserRole = 'manager' | 'employee';
 

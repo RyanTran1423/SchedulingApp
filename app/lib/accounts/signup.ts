@@ -10,7 +10,7 @@ import {
   isValidPassword,
   isValidUserRole,
 } from '@/app/lib/utils/validation';
-import { BCRYPT_SALT_ROUNDS } from '@/app/lib/constants';
+import { BCRYPT_SALT_ROUNDS } from '@/app/lib/constants/authentication-constants';
 
 export async function createAccount(formData: FormData) {
   const name = formData.get('name')?.toString().trim();
