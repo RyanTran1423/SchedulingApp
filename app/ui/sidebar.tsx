@@ -29,6 +29,7 @@ export default function Sidebar({ role, userName }: SidebarProps) {
           { name: 'Messages', href: `${basePath}/messages` },
           { name: 'Request Time Off', href: `${basePath}/request-time-off` },
           { name: 'Set Preferred Availability', href: `${basePath}/set-preferred-availability` },
+          { name: 'View Employees', href: `${basePath}/view-employees` },
         ];
 
   const generalLinks = [
