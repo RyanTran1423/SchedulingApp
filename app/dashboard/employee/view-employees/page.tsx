@@ -1,4 +1,15 @@
-export default function ViewEmployeesPage() {
+//'use client';
+
+import { requireEmployee } from "@/app/lib/utils/auth/require-employee";
+import {getEmployees} from '@/app/lib/repos/view-employees';
+
+
+export default async function ViewEmployeesPage() {
+
+  const employee = await requireEmployee();
+
+  const employees = await getEmployees(employee.organization_id);
+
   return (
     <section>
         <div className="mb-8">
@@ -10,9 +21,45 @@ export default function ViewEmployeesPage() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_420px]"> </div>
             <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
+                <table className="min-w-full">
+                    <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                            Name
+                          </th>
 
-            </div>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                            Email
+                          </th>
 
-    </section>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                            Role
+                          </th>
+
+                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                            Organization
+                          </th>
+                        </tr>
+                    </thead>
+
+                      <tbody>
+                        {employees.map((employee) => (
+                          <tr
+                            key={employee.email}
+                            className="border-t border-gray-200"
+                          >
+                            <td className="px-6 py-4">{employee.name}</td>
+
+                            <td className="px-6 py-4">{employee.email}</td>
+
+                            <td className="px-6 py-4">{employee.role}</td>
+
+                            <td className="px-6 py-4">{employee.organization}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                </table>
+          </div>
+      </section>
   );
 }

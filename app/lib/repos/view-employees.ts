@@ -10,25 +10,21 @@ export type ViewEmployeeRow = {
 }
 
 export async function getEmployees(
-    organizationId: string
+    organizationId: number
 ): Promise<ViewEmployeeRow[]> {
-
-    const employees = await sql<ViewEmployeeRow[]>`
+ // users.email goes in blank space
+    const employees = await sql<ViewEmployeeRow[]>` 
         SELECT
             users.name,
             users.email,
-            organization_roles.name AS role,
-            organization.name AS organization
+            users.role,
+            organizations.name AS organization
         FROM users
-        JOIN organization
-            ON users.organization_id = organization.id
-        LEFT JOIN user_organization_roles
-            ON users.id = user_organization_roles.user_id
-        LEFT JOIN organization_roles
-            ON user_organization_roles.organization_role_id = organization_roles.id
+        JOIN organizations
+            ON users.organization_id = organizations.id
         WHERE users.organization_id = ${organizationId}
         ORDER BY users.name;
     `;
-
+    
     return employees;
 }
