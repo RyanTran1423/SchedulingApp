@@ -24,19 +24,19 @@ export default async function ViewEmployeesPage() {
                 <table className="min-w-full">
                     <thead className="bg-gray-100">
                         <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                             Name
                           </th>
 
-                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                             Email
                           </th>
 
-                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                             Role
                           </th>
 
-                          <th className="px-6 py-3 text-left text-sm font-semibold">
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                             Organization
                           </th>
                         </tr>
@@ -48,13 +48,13 @@ export default async function ViewEmployeesPage() {
                             key={employee.email}
                             className="border-t border-gray-200"
                           >
-                            <td className="px-6 py-4">{employee.name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-700">{employee.name}</td>
 
-                            <td className="px-6 py-4">{employee.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-700">{employee.email}</td>
 
-                            <td className="px-6 py-4">{employee.role}</td>
+                            <td className="px-6 py-4 text-sm text-gray-700">{employee.role}</td>
 
-                            <td className="px-6 py-4">{employee.organization}</td>
+                            <td className="px-6 py-4 text-sm text-gray-700">{employee.organization}</td>
                           </tr>
                         ))}
                       </tbody>
