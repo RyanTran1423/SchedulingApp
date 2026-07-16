@@ -18,7 +18,7 @@ importers:
         specifier: 16.2.2
         version: 16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       postgres:
-        specifier: ^3.4.7
+        specifier: 3.4.7
         version: 3.4.7
       react:
         specifier: 19.2.4

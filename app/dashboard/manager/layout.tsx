@@ -1,12 +1,12 @@
 import Sidebar from '@/app/ui/sidebar';
-import { requireRoleFromCookie } from '@/app/lib/utils/cookie';
+import { requireManager } from '@/app/lib/utils/auth/require-manager';
 
 export default async function ManagerDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireRoleFromCookie('manager');
+  const user = await requireManager();
 
   return (
     <div className="flex min-h-screen bg-[#f3f3f3]">

@@ -175,7 +175,7 @@ export async function saveEmployeeAvailability(
     };
   }
 
-  revalidatePath('/dashboard/employee');    // Change to employee set availability once that route exists
+  revalidatePath('/dashboard/employee/set-preferred-availability');    // Change to employee set availability once that route exists
 
   return {
     success: 'Availability saved successfully.',
