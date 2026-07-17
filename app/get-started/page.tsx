@@ -21,15 +21,15 @@ export default function GetStartedPage() {
 
   return (
     <main className="min-h-screen bg-[#f3f3f3]">
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="h-155 w-full max-w-lg rounded-xl bg-gray-300 p-8">
+      <div className="flex min-h-screen items-center justify-center px-4 py-8">
+        <div className="min-h[620px] w-full max-w-lg rounded-xl bg-gray-300 p-8">
           <h1 className={`${grotesk.className} mb-8 text-center text-2xl font-medium text-black`}>
             Create an
             <br />
             Account
           </h1>
 
-          <form action={createAccount} className="flex flex-col gap-4">
+          <form action={createAccount} className="flex flex-col gap-5">
             <div className={`${inter.className} flex flex-col gap-1`}>
               <label htmlFor="name" className="text-sm text-black">
                 Name
@@ -45,7 +45,7 @@ export default function GetStartedPage() {
               />
             </div>
 
-            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+            <div className={`${inter.className} flex flex-col gap-1`}>
               <label htmlFor="email" className="text-sm text-black">
                 Email
               </label>
@@ -53,14 +53,14 @@ export default function GetStartedPage() {
               <input
                 id="email"
                 name="email"
-                type="text"
+                type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="h-10 w-full border border-black bg-white px-3 text-black"
               />
             </div>
 
-            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+            <div className={`${inter.className} flex flex-col gap-1`}>
               <label htmlFor="password" className="text-sm text-black">
                 Password
               </label>
@@ -82,7 +82,7 @@ export default function GetStartedPage() {
               </button>
             </div>
 
-            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+            <div className={`${inter.className} flex flex-col gap-1`}>
               <label htmlFor="role" className="text-sm text-black">
                 Role
               </label>
@@ -100,7 +100,7 @@ export default function GetStartedPage() {
               </select>
             </div>
 
-            <div className={`${inter.className} mt-5 flex flex-col gap-1`}>
+            <div className={`${inter.className} flex flex-col gap-1`}>
               <label htmlFor="organization" className="text-sm text-black">
                 Organization
               </label>
@@ -117,7 +117,7 @@ export default function GetStartedPage() {
 
             <button
               type="submit"
-              className={`${inter.className} mt-8 w-full rounded-md bg-purple-500 px-4 py-2 text-white`}
+              className={`${inter.className} mt-2 w-full rounded-md bg-purple-500 px-4 py-2 text-white`}
             >
               Submit
             </button>
