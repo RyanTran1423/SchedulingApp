@@ -28,8 +28,12 @@ export default function Sidebar({ role, userName }: SidebarProps) {
       : [
           { name: 'Dashboard', href: basePath },
           { name: 'Messages', href: `${basePath}/messages` },
+          { name: 'My Calendar', href: `${basePath}/schedule` },
           { name: 'Request Time Off', href: `${basePath}/request-time-off` },
-          { name: 'Set Preferred Availability', href: `${basePath}/set-preferred-availability` },
+          {
+            name: 'Set Preferred Availability',
+            href: `${basePath}/set-preferred-availability`,
+          },
           { name: 'View Employees', href: `${basePath}/view-employees` },
         ];
 
@@ -39,7 +43,7 @@ export default function Sidebar({ role, userName }: SidebarProps) {
   ];
 
   const linkClass = (href: string) => {
-    const isActive = pathname === href;
+    const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
     return `rounded-md px-3 py-2 text-sm font-medium transition ${
       isActive
@@ -50,22 +54,20 @@ export default function Sidebar({ role, userName }: SidebarProps) {
 
   return (
     <aside className="flex min-h-screen w-80 flex-col border-r border-gray-300 bg-white px-4 py-6">
-      
-      {/* TOP SECTION */}
-      <div className="mb-8 flex items-center justify-between w-full shrink-0">
+      <div className="mb-8 flex w-full shrink-0 items-center justify-between">
         <div>
-  <h1 className="text-xl font-bold text-black">
-    Welcome, {userName}
-  </h1>
-  <p className="text-sm capitalize text-gray-500">{role}</p>
-</div>
+          <h1 className="text-xl font-bold text-black">
+            Welcome, {userName}
+          </h1>
 
-        {/* ✅ PROFILE BUTTON */}
+          <p className="text-sm capitalize text-gray-500">
+            {role}
+          </p>
+        </div>
+
         <Link href={`/dashboard/${role}/profile`}>
-          <div className="h-10 w-10 rounded-full bg-gray-400 hover:bg-gray-500 transition cursor-pointer flex items-center justify-center text-white font-semibold">
-            {userName
-  ? userName.charAt(0).toUpperCase()
-  : 'P'}
+          <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gray-400 font-semibold text-white transition hover:bg-gray-500">
+            {userName ? userName.charAt(0).toUpperCase() : 'P'}
           </div>
         </Link>
       </div>
@@ -78,7 +80,11 @@ export default function Sidebar({ role, userName }: SidebarProps) {
 
           <div className="flex flex-col gap-1">
             {mainLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={linkClass(link.href)}>
+              <Link
+                key={link.href}
+                href={link.href}
+                className={linkClass(link.href)}
+              >
                 {link.name}
               </Link>
             ))}
@@ -92,7 +98,11 @@ export default function Sidebar({ role, userName }: SidebarProps) {
 
           <div className="flex flex-col gap-1">
             {generalLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={linkClass(link.href)}>
+              <Link
+                key={link.href}
+                href={link.href}
+                className={linkClass(link.href)}
+              >
                 {link.name}
               </Link>
             ))}
