@@ -2,11 +2,16 @@ import { findOrganizationRoles } from '@/app/lib/repos/org-roles';
 import { requireManager } from '@/app/lib/utils/auth/require-manager';
 import { deleteOrganizationRole } from '@/app/lib/roles/org-role-actions';
 import CreateOrgRoleForm from './create-org-role-form';
+import { getEmployees } from '@/app/lib/repos/view-employees';
+
 
 export default async function SetOrgRolesPage() {
   const manager = await requireManager();
+  
+  const employees = await getEmployees(manager.organization_id);
 
   const roles = await findOrganizationRoles(manager.organization_id);
+
 
   return (
     <section>
@@ -48,6 +53,23 @@ export default async function SetOrgRolesPage() {
                     </p>
                   </div>
 
+                  <div className="flex flex-col items-end gap-2">
+                    <p className="text-sm font-medium text-black">Assigned Employees:</p>
+
+                    {role.employees.length === 0 ? (
+                      <p className="text-sm text-grey-500">No employees assigned.</p>
+                    ) : (
+                      <ul className="text-sm text-gray-500">
+                        {role.employees.map((employee) => (
+                          <li key={employee.id}>{employee.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  
+
+                  
+
                   <form action={deleteOrganizationRole}>
                     <input type="hidden" name="roleId" value={role.id} />
 
@@ -64,7 +86,11 @@ export default async function SetOrgRolesPage() {
           )}
         </div>
 
-        <CreateOrgRoleForm />
+        
+
+        <CreateOrgRoleForm employees={employees} />
+          
+
       </div>
     </section>
   );

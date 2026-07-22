@@ -3,6 +3,7 @@
 import {sql} from '@/app/lib/db';
 
 export type ViewEmployeeRow = {
+    id: number;
     name: string;
     email: string;
     role: string;
@@ -15,6 +16,7 @@ export async function getEmployees(
  // users.email goes in blank space
     const employees = await sql<ViewEmployeeRow[]>` 
         SELECT
+            users.id,
             users.name,
             users.email,
             users.role,
@@ -23,6 +25,7 @@ export async function getEmployees(
         JOIN organizations
             ON users.organization_id = organizations.id
         WHERE users.organization_id = ${organizationId}
+            AND users.role = 'employee'
         ORDER BY users.name;
     `;
     

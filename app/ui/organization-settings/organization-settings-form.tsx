@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useMemo, useState } from 'react';
+import {
+  type FormEvent,
+  useActionState,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from 'react';
 import {
   saveOrganizationSettings,
   type OrganizationSettingsActionState,
@@ -100,21 +107,24 @@ function buildWorkingHoursByDay(
   const workingHoursByDay: WorkingHoursByDay = {};
 
   for (const day of DAYS) {
-    workingHoursByDay[day.value] = getDefaultWorkingHours(day.value);
+    workingHoursByDay[day.value] =
+      getDefaultWorkingHours(day.value);
   }
 
   for (const savedHours of initialWorkingHours) {
+    const dayOfWeek = Number(savedHours.dayOfWeek);
+
     if (
-      !Number.isInteger(savedHours.dayOfWeek) ||
-      savedHours.dayOfWeek < 0 ||
-      savedHours.dayOfWeek > 6
+      !Number.isInteger(dayOfWeek) ||
+      dayOfWeek < 0 ||
+      dayOfWeek > 6
     ) {
       continue;
     }
 
-    workingHoursByDay[savedHours.dayOfWeek] = {
-      dayOfWeek: savedHours.dayOfWeek,
-      isClosed: savedHours.isClosed,
+    workingHoursByDay[dayOfWeek] = {
+      dayOfWeek,
+      isClosed: savedHours.isClosed === true,
       startTime: savedHours.startTime || '09:00',
       endTime: savedHours.endTime || '17:00',
     };
@@ -133,19 +143,26 @@ function buildRequirementsByDay(
   }
 
   for (const savedRequirement of initialRoleRequirements) {
+    const dayOfWeek = Number(savedRequirement.dayOfWeek);
+    const organizationRoleId = Number(
+      savedRequirement.organizationRoleId,
+    );
+
     if (
-      !Number.isInteger(savedRequirement.dayOfWeek) ||
-      savedRequirement.dayOfWeek < 0 ||
-      savedRequirement.dayOfWeek > 6
+      !Number.isInteger(dayOfWeek) ||
+      dayOfWeek < 0 ||
+      dayOfWeek > 6 ||
+      !Number.isInteger(organizationRoleId) ||
+      organizationRoleId <= 0
     ) {
       continue;
     }
 
-    requirementsByDay[savedRequirement.dayOfWeek].push({
+    requirementsByDay[dayOfWeek].push({
       clientId: savedRequirement.id
         ? `saved-requirement-${savedRequirement.id}`
         : createClientId('saved-requirement'),
-      organizationRoleId: savedRequirement.organizationRoleId,
+      organizationRoleId,
       startTime: savedRequirement.startTime,
       endTime: savedRequirement.endTime,
       requiredCount: String(savedRequirement.requiredCount),
@@ -160,10 +177,14 @@ export default function OrganizationSettingsForm({
   initialWorkingHours,
   initialRoleRequirements,
 }: OrganizationSettingsFormProps) {
-  const [state, formAction, isPending] = useActionState(
+  const [state, submitAction, actionPending] = useActionState(
     saveOrganizationSettings,
     initialActionState,
   );
+
+  const [transitionPending, startTransition] = useTransition();
+
+  const isPending = actionPending || transitionPending;
 
   const [workingHoursByDay, setWorkingHoursByDay] = useState(
     () => buildWorkingHoursByDay(initialWorkingHours),
@@ -175,6 +196,20 @@ export default function OrganizationSettingsForm({
 
   const [copyFromDay, setCopyFromDay] = useState(1);
   const [copyToDay, setCopyToDay] = useState('all');
+
+  /*
+   * When revalidatePath loads fresh database values after a save,
+   * synchronize the local client state with those new values.
+   */
+  useEffect(() => {
+    setWorkingHoursByDay(
+      buildWorkingHoursByDay(initialWorkingHours),
+    );
+
+    setRequirementsByDay(
+      buildRequirementsByDay(initialRoleRequirements),
+    );
+  }, [initialWorkingHours, initialRoleRequirements]);
 
   const serializedSettings = useMemo(() => {
     const workingHours = DAYS.map((day) => {
@@ -195,13 +230,16 @@ export default function OrganizationSettingsForm({
         return [];
       }
 
-      return requirementsByDay[day.value].map((requirement) => ({
-        organizationRoleId: requirement.organizationRoleId,
-        dayOfWeek: day.value,
-        startTime: requirement.startTime,
-        endTime: requirement.endTime,
-        requiredCount: Number(requirement.requiredCount),
-      }));
+      return requirementsByDay[day.value].map(
+        (requirement) => ({
+          organizationRoleId:
+            requirement.organizationRoleId,
+          dayOfWeek: day.value,
+          startTime: requirement.startTime,
+          endTime: requirement.endTime,
+          requiredCount: Number(requirement.requiredCount),
+        }),
+      );
     });
 
     return JSON.stringify({
@@ -210,10 +248,29 @@ export default function OrganizationSettingsForm({
     });
   }, [workingHoursByDay, requirementsByDay]);
 
+  function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ): void {
+    event.preventDefault();
+
+    const formData = new FormData();
+
+    /*
+     * Build FormData directly from current React state.
+     * This avoids the browser resetting the form after
+     * the server action completes.
+     */
+    formData.set('settings', serializedSettings);
+
+    startTransition(() => {
+      submitAction(formData);
+    });
+  }
+
   function toggleDayClosed(
     dayOfWeek: number,
     isClosed: boolean,
-  ) {
+  ): void {
     setWorkingHoursByDay((current) => {
       const currentHours = current[dayOfWeek];
 
@@ -240,7 +297,7 @@ export default function OrganizationSettingsForm({
     dayOfWeek: number,
     field: 'startTime' | 'endTime',
     value: string,
-  ) {
+  ): void {
     setWorkingHoursByDay((current) => ({
       ...current,
       [dayOfWeek]: {
@@ -250,7 +307,7 @@ export default function OrganizationSettingsForm({
     }));
   }
 
-  function addRequirement(dayOfWeek: number) {
+  function addRequirement(dayOfWeek: number): void {
     const hours = workingHoursByDay[dayOfWeek];
     const firstRole = roles[0];
 
@@ -264,7 +321,7 @@ export default function OrganizationSettingsForm({
         ...current[dayOfWeek],
         {
           clientId: createClientId(),
-          organizationRoleId: firstRole.id,
+          organizationRoleId: Number(firstRole.id),
           startTime: hours.startTime || '09:00',
           endTime: hours.endTime || '17:00',
           requiredCount: '1',
@@ -277,16 +334,17 @@ export default function OrganizationSettingsForm({
     dayOfWeek: number,
     clientId: string,
     changes: Partial<EditableRoleRequirement>,
-  ) {
+  ): void {
     setRequirementsByDay((current) => ({
       ...current,
-      [dayOfWeek]: current[dayOfWeek].map((requirement) =>
-        requirement.clientId === clientId
-          ? {
-              ...requirement,
-              ...changes,
-            }
-          : requirement,
+      [dayOfWeek]: current[dayOfWeek].map(
+        (requirement) =>
+          requirement.clientId === clientId
+            ? {
+                ...requirement,
+                ...changes,
+              }
+            : requirement,
       ),
     }));
   }
@@ -294,16 +352,17 @@ export default function OrganizationSettingsForm({
   function removeRequirement(
     dayOfWeek: number,
     clientId: string,
-  ) {
+  ): void {
     setRequirementsByDay((current) => ({
       ...current,
       [dayOfWeek]: current[dayOfWeek].filter(
-        (requirement) => requirement.clientId !== clientId,
+        (requirement) =>
+          requirement.clientId !== clientId,
       ),
     }));
   }
 
-  function copyDaySettings() {
+  function copyDaySettings(): void {
     const targetDays =
       copyToDay === 'all'
         ? DAYS.map((day) => day.value).filter(
@@ -319,7 +378,8 @@ export default function OrganizationSettingsForm({
     }
 
     const sourceHours = workingHoursByDay[copyFromDay];
-    const sourceRequirements = requirementsByDay[copyFromDay];
+    const sourceRequirements =
+      requirementsByDay[copyFromDay];
 
     setWorkingHoursByDay((current) => {
       const updatedHours = {
@@ -342,12 +402,15 @@ export default function OrganizationSettingsForm({
       };
 
       for (const targetDay of targetDays) {
-        updatedRequirements[targetDay] = sourceHours.isClosed
-          ? []
-          : sourceRequirements.map((requirement) => ({
-              ...requirement,
-              clientId: createClientId('copied-requirement'),
-            }));
+        updatedRequirements[targetDay] =
+          sourceHours.isClosed
+            ? []
+            : sourceRequirements.map((requirement) => ({
+                ...requirement,
+                clientId: createClientId(
+                  'copied-requirement',
+                ),
+              }));
       }
 
       return updatedRequirements;
@@ -359,13 +422,7 @@ export default function OrganizationSettingsForm({
     Number(copyToDay) === copyFromDay;
 
   return (
-    <form action={formAction}>
-      <input
-        type="hidden"
-        name="settings"
-        value={serializedSettings}
-      />
-
+    <form onSubmit={handleSubmit}>
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="flex flex-col gap-6">
           <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
@@ -374,12 +431,15 @@ export default function OrganizationSettingsForm({
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              Set when your organization is normally open each day.
+              Set when your organization is normally open each
+              day.
             </p>
 
             <div className="mt-6 flex flex-col gap-5">
               {DAYS.map((day) => {
-                const hours = workingHoursByDay[day.value];
+                const hours =
+                  workingHoursByDay[day.value];
+
                 const requirements =
                   requirementsByDay[day.value];
 
@@ -477,7 +537,8 @@ export default function OrganizationSettingsForm({
                               </h4>
 
                               <p className="text-sm text-gray-500">
-                                Set the minimum employees needed by role.
+                                Set the minimum employees needed by
+                                role.
                               </p>
                             </div>
 
@@ -497,8 +558,8 @@ export default function OrganizationSettingsForm({
                           {roles.length === 0 ? (
                             <div className="rounded-md border border-dashed border-gray-300 bg-white p-4">
                               <p className="text-sm text-gray-600">
-                                Create organization roles before adding
-                                staffing requirements.
+                                Create organization roles before
+                                adding staffing requirements.
                               </p>
 
                               <Link
@@ -511,162 +572,180 @@ export default function OrganizationSettingsForm({
                           ) : requirements.length === 0 ? (
                             <div className="rounded-md border border-dashed border-gray-300 bg-white p-4 text-center">
                               <p className="text-sm text-gray-500">
-                                No staffing requirements added for this
-                                day.
+                                No staffing requirements added for
+                                this day.
                               </p>
                             </div>
                           ) : (
                             <div className="flex flex-col gap-3">
-                              {requirements.map((requirement) => (
-                                <div
-                                  key={requirement.clientId}
-                                  className="rounded-md border border-gray-200 bg-white p-4"
-                                >
-                                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                                    <div className="flex flex-col gap-1">
-                                      <label
-                                        htmlFor={`role-${requirement.clientId}`}
-                                        className="text-sm font-medium text-black"
-                                      >
-                                        Role
-                                      </label>
+                              {requirements.map(
+                                (requirement) => (
+                                  <div
+                                    key={
+                                      requirement.clientId
+                                    }
+                                    className="rounded-md border border-gray-200 bg-white p-4"
+                                  >
+                                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                      <div className="flex flex-col gap-1">
+                                        <label
+                                          htmlFor={`role-${requirement.clientId}`}
+                                          className="text-sm font-medium text-black"
+                                        >
+                                          Role
+                                        </label>
 
-                                      <select
-                                        id={`role-${requirement.clientId}`}
-                                        value={
-                                          requirement.organizationRoleId
-                                        }
-                                        onChange={(event) =>
-                                          updateRequirement(
-                                            day.value,
-                                            requirement.clientId,
-                                            {
-                                              organizationRoleId:
-                                                Number(
-                                                  event.target.value,
-                                                ),
-                                            },
-                                          )
-                                        }
-                                        className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
-                                      >
-                                        {roles.map((role) => (
-                                          <option
-                                            key={role.id}
-                                            value={role.id}
-                                          >
-                                            {role.name}
-                                          </option>
-                                        ))}
-                                      </select>
+                                        <select
+                                          id={`role-${requirement.clientId}`}
+                                          value={
+                                            requirement.organizationRoleId
+                                          }
+                                          onChange={(event) =>
+                                            updateRequirement(
+                                              day.value,
+                                              requirement.clientId,
+                                              {
+                                                organizationRoleId:
+                                                  Number(
+                                                    event.target
+                                                      .value,
+                                                  ),
+                                              },
+                                            )
+                                          }
+                                          className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
+                                        >
+                                          {roles.map((role) => (
+                                            <option
+                                              key={role.id}
+                                              value={Number(
+                                                role.id,
+                                              )}
+                                            >
+                                              {role.name}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex flex-col gap-1">
+                                        <label
+                                          htmlFor={`requirement-start-${requirement.clientId}`}
+                                          className="text-sm font-medium text-black"
+                                        >
+                                          Start Time
+                                        </label>
+
+                                        <input
+                                          id={`requirement-start-${requirement.clientId}`}
+                                          type="time"
+                                          required
+                                          min={
+                                            hours.startTime
+                                          }
+                                          max={hours.endTime}
+                                          value={
+                                            requirement.startTime
+                                          }
+                                          onChange={(event) =>
+                                            updateRequirement(
+                                              day.value,
+                                              requirement.clientId,
+                                              {
+                                                startTime:
+                                                  event.target
+                                                    .value,
+                                              },
+                                            )
+                                          }
+                                          className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
+                                        />
+                                      </div>
+
+                                      <div className="flex flex-col gap-1">
+                                        <label
+                                          htmlFor={`requirement-end-${requirement.clientId}`}
+                                          className="text-sm font-medium text-black"
+                                        >
+                                          End Time
+                                        </label>
+
+                                        <input
+                                          id={`requirement-end-${requirement.clientId}`}
+                                          type="time"
+                                          required
+                                          min={
+                                            hours.startTime
+                                          }
+                                          max={hours.endTime}
+                                          value={
+                                            requirement.endTime
+                                          }
+                                          onChange={(event) =>
+                                            updateRequirement(
+                                              day.value,
+                                              requirement.clientId,
+                                              {
+                                                endTime:
+                                                  event.target
+                                                    .value,
+                                              },
+                                            )
+                                          }
+                                          className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
+                                        />
+                                      </div>
+
+                                      <div className="flex flex-col gap-1">
+                                        <label
+                                          htmlFor={`required-count-${requirement.clientId}`}
+                                          className="text-sm font-medium text-black"
+                                        >
+                                          Employees Needed
+                                        </label>
+
+                                        <input
+                                          id={`required-count-${requirement.clientId}`}
+                                          type="number"
+                                          required
+                                          min={1}
+                                          step={1}
+                                          value={
+                                            requirement.requiredCount
+                                          }
+                                          onChange={(event) =>
+                                            updateRequirement(
+                                              day.value,
+                                              requirement.clientId,
+                                              {
+                                                requiredCount:
+                                                  event.target
+                                                    .value,
+                                              },
+                                            )
+                                          }
+                                          className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
+                                        />
+                                      </div>
                                     </div>
 
-                                    <div className="flex flex-col gap-1">
-                                      <label
-                                        htmlFor={`requirement-start-${requirement.clientId}`}
-                                        className="text-sm font-medium text-black"
-                                      >
-                                        Start Time
-                                      </label>
-
-                                      <input
-                                        id={`requirement-start-${requirement.clientId}`}
-                                        type="time"
-                                        required
-                                        min={hours.startTime}
-                                        max={hours.endTime}
-                                        value={requirement.startTime}
-                                        onChange={(event) =>
-                                          updateRequirement(
+                                    <div className="mt-3 flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          removeRequirement(
                                             day.value,
                                             requirement.clientId,
-                                            {
-                                              startTime:
-                                                event.target.value,
-                                            },
                                           )
                                         }
-                                        className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
-                                      />
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                      <label
-                                        htmlFor={`requirement-end-${requirement.clientId}`}
-                                        className="text-sm font-medium text-black"
+                                        className="rounded-md px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-100"
                                       >
-                                        End Time
-                                      </label>
-
-                                      <input
-                                        id={`requirement-end-${requirement.clientId}`}
-                                        type="time"
-                                        required
-                                        min={hours.startTime}
-                                        max={hours.endTime}
-                                        value={requirement.endTime}
-                                        onChange={(event) =>
-                                          updateRequirement(
-                                            day.value,
-                                            requirement.clientId,
-                                            {
-                                              endTime:
-                                                event.target.value,
-                                            },
-                                          )
-                                        }
-                                        className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
-                                      />
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                      <label
-                                        htmlFor={`required-count-${requirement.clientId}`}
-                                        className="text-sm font-medium text-black"
-                                      >
-                                        Employees Needed
-                                      </label>
-
-                                      <input
-                                        id={`required-count-${requirement.clientId}`}
-                                        type="number"
-                                        required
-                                        min={1}
-                                        step={1}
-                                        value={
-                                          requirement.requiredCount
-                                        }
-                                        onChange={(event) =>
-                                          updateRequirement(
-                                            day.value,
-                                            requirement.clientId,
-                                            {
-                                              requiredCount:
-                                                event.target.value,
-                                            },
-                                          )
-                                        }
-                                        className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
-                                      />
+                                        Remove
+                                      </button>
                                     </div>
                                   </div>
-
-                                  <div className="mt-3 flex justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        removeRequirement(
-                                          day.value,
-                                          requirement.clientId,
-                                        )
-                                      }
-                                      className="rounded-md px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-100"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
+                                ),
+                              )}
                             </div>
                           )}
                         </div>
@@ -685,7 +764,8 @@ export default function OrganizationSettingsForm({
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Copy one day’s setup, review your settings, and save.
+            Copy one day’s setup, review your settings, and
+            save.
           </p>
 
           <div className="mt-6 flex flex-col gap-4">
@@ -701,12 +781,17 @@ export default function OrganizationSettingsForm({
                 id="copy-from-day"
                 value={copyFromDay}
                 onChange={(event) =>
-                  setCopyFromDay(Number(event.target.value))
+                  setCopyFromDay(
+                    Number(event.target.value),
+                  )
                 }
                 className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
               >
                 {DAYS.map((day) => (
-                  <option key={day.value} value={day.value}>
+                  <option
+                    key={day.value}
+                    value={day.value}
+                  >
                     {day.label}
                   </option>
                 ))}
@@ -729,10 +814,15 @@ export default function OrganizationSettingsForm({
                 }
                 className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black outline-none focus:border-purple-500"
               >
-                <option value="all">All other days</option>
+                <option value="all">
+                  All other days
+                </option>
 
                 {DAYS.map((day) => (
-                  <option key={day.value} value={day.value}>
+                  <option
+                    key={day.value}
+                    value={day.value}
+                  >
                     {day.label}
                   </option>
                 ))}
