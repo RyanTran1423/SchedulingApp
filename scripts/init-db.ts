@@ -33,7 +33,8 @@ async function main() {
         CHECK (role IN ('manager', 'employee')),
 
       organization_id INTEGER NOT NULL
-        REFERENCES organizations(id),
+        REFERENCES organizations(id)
+        ON DELETE CASCADE,
 
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
@@ -172,6 +173,10 @@ async function main() {
     CREATE TABLE IF NOT EXISTS organization_role_requirements (
       id SERIAL PRIMARY KEY,
 
+      organization_id INTEGER NOT NULL
+        REFERENCES organizations(id)
+        ON DELETE CASCADE,
+
       organization_role_id INTEGER NOT NULL
         REFERENCES organization_roles(id)
         ON DELETE CASCADE,
@@ -193,6 +198,7 @@ async function main() {
 
       CONSTRAINT unique_role_requirement_window
         UNIQUE (
+          organization_id,
           organization_role_id,
           day_of_week,
           start_time,
@@ -202,12 +208,92 @@ async function main() {
   `;
 
   // -------------------------------------------------------
+  // Shifts
+  // -------------------------------------------------------
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS shifts (
+      id SERIAL PRIMARY KEY,
+
+      organization_id INTEGER NOT NULL
+        REFERENCES organizations(id)
+        ON DELETE CASCADE,
+
+      employee_id INTEGER NOT NULL
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+      organization_role_id INTEGER
+        REFERENCES organization_roles(id)
+        ON DELETE SET NULL,
+
+      shift_date DATE NOT NULL,
+
+      start_time TIME NOT NULL,
+      end_time TIME NOT NULL,
+
+      status TEXT NOT NULL DEFAULT 'scheduled'
+        CHECK (
+          status IN (
+            'scheduled',
+            'sub_requested',
+            'covered',
+            'cancelled'
+          )
+        ),
+
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+
+      CONSTRAINT valid_shift_time_range
+        CHECK (start_time < end_time)
+    );
+  `;
+
+  // -------------------------------------------------------
+  // Shift sub requests
+  // -------------------------------------------------------
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS shift_sub_requests (
+      id SERIAL PRIMARY KEY,
+
+      shift_id INTEGER NOT NULL
+        REFERENCES shifts(id)
+        ON DELETE CASCADE,
+
+      requested_by_user_id INTEGER NOT NULL
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+      picked_up_by_user_id INTEGER
+        REFERENCES users(id)
+        ON DELETE SET NULL,
+
+      status TEXT NOT NULL DEFAULT 'open'
+        CHECK (
+          status IN (
+            'open',
+            'picked_up',
+            'approved',
+            'denied',
+            'cancelled'
+          )
+        ),
+
+      reason TEXT,
+
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  // -------------------------------------------------------
   // Indexes
   // -------------------------------------------------------
 
   await sql`
-    CREATE INDEX IF NOT EXISTS
-      employee_weekly_availability_user_day_idx
+    CREATE INDEX IF NOT EXISTS employee_weekly_availability_user_day_idx
     ON employee_weekly_availability (
       user_id,
       day_of_week
@@ -215,16 +301,28 @@ async function main() {
   `;
 
   await sql`
-    CREATE INDEX IF NOT EXISTS
-      organization_roles_organization_idx
+    CREATE INDEX IF NOT EXISTS organization_roles_organization_idx
     ON organization_roles (
       organization_id
     );
   `;
 
   await sql`
-    CREATE INDEX IF NOT EXISTS
-      organization_weekly_hours_org_day_idx
+    CREATE INDEX IF NOT EXISTS user_organization_roles_user_idx
+    ON user_organization_roles (
+      user_id
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS user_organization_roles_role_idx
+    ON user_organization_roles (
+      organization_role_id
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS organization_weekly_hours_org_day_idx
     ON organization_weekly_hours (
       organization_id,
       day_of_week
@@ -232,11 +330,59 @@ async function main() {
   `;
 
   await sql`
-    CREATE INDEX IF NOT EXISTS
-      organization_role_requirements_role_day_idx
+    CREATE INDEX IF NOT EXISTS organization_role_requirements_org_day_idx
+    ON organization_role_requirements (
+      organization_id,
+      day_of_week
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS organization_role_requirements_role_day_idx
     ON organization_role_requirements (
       organization_role_id,
       day_of_week
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS shifts_org_date_idx
+    ON shifts (
+      organization_id,
+      shift_date
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS shifts_employee_date_idx
+    ON shifts (
+      employee_id,
+      shift_date
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS shift_sub_requests_status_idx
+    ON shift_sub_requests (
+      status
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS shift_sub_requests_shift_idx
+    ON shift_sub_requests (
+      shift_id
+    );
+  `;
+
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS shift_sub_requests_active_shift_idx
+    ON shift_sub_requests (
+      shift_id
+    )
+    WHERE status IN (
+      'open',
+      'picked_up'
     );
   `;
 
