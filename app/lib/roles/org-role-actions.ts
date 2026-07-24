@@ -11,6 +11,7 @@ import {
 } from '@/app/lib/repos/org-roles';
 import { requireManager } from '@/app/lib/utils/auth/require-manager';
 import { isValidOrganizationRoleName } from '@/app/lib/utils/validation';
+import { assignEmployeeToRole } from '@/app/lib/repos/assign-role';
 
 type RoleActionState = {
   error?: string;
@@ -25,12 +26,21 @@ export async function createOrganizationRole(
 
   const name = formData.get('name')?.toString().trim();
   const description = formData.get('description')?.toString().trim();
+  const employeeId = Number(formData.get('employeeId'));
 
   if (!isValidOrganizationRoleName(name)) {
     return {
       error: 'Role name is required.',
     };
   }
+
+  // validates employee id
+
+  if (!Number.isInteger(employeeId) || employeeId <= 0) {
+  return {
+    error: 'Please select an employee.',
+  };
+}
 
   const existingRole = await findOrganizationRoleByName(
     manager.organization_id,
@@ -43,11 +53,18 @@ export async function createOrganizationRole(
     };
   }
 
-  await createOrganizationRoleRecord(
+  const createdRole =await createOrganizationRoleRecord(
     manager.organization_id,
     name,
     description,
   );
+
+  // assign the role to the employee if an employee is selected
+  await assignEmployeeToRole(
+  manager.organization_id,
+  employeeId,
+  createdRole.id,
+);
 
   revalidatePath('/dashboard/manager/set-org-roles');
 
@@ -76,4 +93,48 @@ export async function deleteOrganizationRole(formData: FormData) {
   }
 
   revalidatePath('/dashboard/manager/set-org-roles');
+}
+
+// function to assign role to employee
+
+export async function assignEmployeeRole(
+  formData: FormData,
+) {
+  const manager = await requireManager();
+
+  const employeeId = Number(
+    formData.get('employeeId')
+  );
+
+  const roleId = Number(
+    formData.get('roleId')
+  );
+
+
+  if (
+    !Number.isInteger(employeeId) ||
+    employeeId <= 0
+  ) {
+    throw new Error('A valid employee id is required.');
+  }
+
+
+  if (
+    !Number.isInteger(roleId) ||
+    roleId <= 0
+  ) {
+    throw new Error('A valid role id is required.');
+  }
+
+
+  await assignEmployeeToRole(
+    manager.organization_id,
+    employeeId,
+    roleId,
+  );
+
+
+  revalidatePath(
+    '/dashboard/manager/set-org-roles'
+  );
 }

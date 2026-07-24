@@ -8,6 +8,10 @@ export type OrganizationRoleRow = {
   organization_id: number;
   name: string;
   description: string | null;
+  employees: {
+    id: number;
+    name: string;
+  }[];
 };
 
 export async function findOrganizationRoles(
@@ -15,13 +19,33 @@ export async function findOrganizationRoles(
 ): Promise<OrganizationRoleRow[]> {
   const result = await sql<OrganizationRoleRow[]>`
     SELECT
-      id,
-      organization_id,
-      name,
-      description
+      organization_roles.id,
+      organization_roles.organization_id,
+      organization_roles.name,
+      organization_roles.description,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', users.id,
+            'name', users.name
+          )
+        ) FILTER (WHERE users.id IS NOT NULL),
+        '[]'
+      ) AS employees
+
     FROM organization_roles
-    WHERE organization_id = ${organizationId}
-    ORDER BY name ASC;
+
+    LEFT JOIN user_organization_roles
+      ON organization_roles.id = user_organization_roles.organization_role_id
+
+    LEFT JOIN users
+      ON user_organization_roles.user_id = users.id
+
+    WHERE organization_roles.organization_id = ${organizationId}
+
+    GROUP BY organization_roles.id
+
+    ORDER BY organization_roles.name ASC;
   `;
 
   return result;
