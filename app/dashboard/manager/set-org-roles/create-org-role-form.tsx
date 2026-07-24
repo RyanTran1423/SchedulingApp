@@ -5,12 +5,22 @@
 import { useActionState } from 'react';
 import { createOrganizationRole } from '@/app/lib/roles/org-role-actions';
 
+type Employee = {
+  id: number;
+  name: string;
+  email: string;
+};
+
 const initialState = {
   error: '',
   success: '',
 };
 
-export default function CreateOrgRoleForm() {
+export default function CreateOrgRoleForm({
+  employees,
+}: {
+  employees: Employee[];
+}) {
   const [state, formAction, isPending] = useActionState(
     createOrganizationRole,
     initialState
@@ -54,6 +64,35 @@ export default function CreateOrgRoleForm() {
             rows={5}
             className="resize-none rounded-md border border-gray-300 bg-white px-3 py-2 text-black outline-none focus:border-purple-500"
           />
+        </div>
+
+        {/* Employee dropdown */}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="employeeId"
+            className="text-sm font-medium text-black"
+          >
+            Assign Employee
+          </label>
+
+          <select
+            id="employeeId"
+            name="employeeId"
+            className="h-10 rounded-md border border-gray-300 bg-white px-3 text-black"
+          >
+            <option value="">
+              Select employee
+            </option>
+
+            {employees.map((employee) => (
+              <option
+                key={employee.id}
+                value={employee.id}
+              >
+                {employee.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {state?.error && (
