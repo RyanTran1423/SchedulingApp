@@ -61,6 +61,7 @@ export async function createOrganizationRole(
 
   // assign the role to the employee if an employee is selected
   await assignEmployeeToRole(
+  manager.organization_id,
   employeeId,
   createdRole.id,
 );
@@ -127,6 +128,7 @@ export async function assignEmployeeRole(
 
 
   await assignEmployeeToRole(
+    manager.organization_id,
     employeeId,
     roleId,
   );
