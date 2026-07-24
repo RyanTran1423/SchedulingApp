@@ -13,6 +13,7 @@ export type OrganizationWeeklyHoursRow = {
 
 export type OrganizationRoleRequirementRow = {
   id: number;
+  organization_id: number;
   organization_role_id: number;
   role_name: string;
   day_of_week: number;
@@ -41,20 +42,21 @@ export type RoleRequirementInput = {
 export async function findOrganizationWeeklyHours(
   organizationId: number,
 ): Promise<OrganizationWeeklyHoursRow[]> {
-  const result = await sql<OrganizationWeeklyHoursRow[]>`
-    SELECT
-      id,
-      organization_id,
-      day_of_week,
-      is_closed,
-      start_time,
-      end_time,
-      created_at,
-      updated_at
-    FROM organization_weekly_hours
-    WHERE organization_id = ${organizationId}
-    ORDER BY day_of_week ASC;
-  `;
+  const result =
+    await sql<OrganizationWeeklyHoursRow[]>`
+      SELECT
+        id,
+        organization_id,
+        day_of_week,
+        is_closed,
+        start_time,
+        end_time,
+        created_at,
+        updated_at
+      FROM organization_weekly_hours
+      WHERE organization_id = ${organizationId}
+      ORDER BY day_of_week ASC;
+    `;
 
   return result;
 }
@@ -62,26 +64,32 @@ export async function findOrganizationWeeklyHours(
 export async function findOrganizationRoleRequirements(
   organizationId: number,
 ): Promise<OrganizationRoleRequirementRow[]> {
-  const result = await sql<OrganizationRoleRequirementRow[]>`
-    SELECT
-      requirement.id,
-      requirement.organization_role_id,
-      role.name AS role_name,
-      requirement.day_of_week,
-      requirement.start_time,
-      requirement.end_time,
-      requirement.required_count,
-      requirement.created_at,
-      requirement.updated_at
-    FROM organization_role_requirements requirement
-    JOIN organization_roles role
-      ON role.id = requirement.organization_role_id
-    WHERE role.organization_id = ${organizationId}
-    ORDER BY
-      requirement.day_of_week ASC,
-      requirement.start_time ASC,
-      role.name ASC;
-  `;
+  const result =
+    await sql<OrganizationRoleRequirementRow[]>`
+      SELECT
+        requirement.id,
+        requirement.organization_id,
+        requirement.organization_role_id,
+        role.name AS role_name,
+        requirement.day_of_week,
+        requirement.start_time,
+        requirement.end_time,
+        requirement.required_count,
+        requirement.created_at,
+        requirement.updated_at
+      FROM organization_role_requirements requirement
+      JOIN organization_roles role
+        ON role.id = requirement.organization_role_id
+        AND role.organization_id =
+          requirement.organization_id
+      WHERE requirement.organization_id =
+        ${organizationId}
+        AND role.organization_id = ${organizationId}
+      ORDER BY
+        requirement.day_of_week ASC,
+        requirement.start_time ASC,
+        role.name ASC;
+    `;
 
   return result;
 }
@@ -122,27 +130,30 @@ export async function replaceOrganizationSettings(
     }
 
     for (const requirement of roleRequirements) {
-      const insertedRows = await transaction<{ id: number }[]>`
-        INSERT INTO organization_role_requirements (
-          organization_id,
-          organization_role_id,
-          day_of_week,
-          start_time,
-          end_time,
-          required_count
-        )
-        SELECT
-          ${organizationId},
-          role.id,
-          ${requirement.dayOfWeek},
-          ${requirement.startTime},
-          ${requirement.endTime},
-          ${requirement.requiredCount}
-        FROM organization_roles role
-        WHERE role.id = ${requirement.organizationRoleId}
-          AND role.organization_id = ${organizationId}
-        RETURNING id;
-      `;
+      const insertedRows =
+        await transaction<{ id: number }[]>`
+          INSERT INTO organization_role_requirements (
+            organization_id,
+            organization_role_id,
+            day_of_week,
+            start_time,
+            end_time,
+            required_count
+          )
+          SELECT
+            ${organizationId},
+            role.id,
+            ${requirement.dayOfWeek},
+            ${requirement.startTime},
+            ${requirement.endTime},
+            ${requirement.requiredCount}
+          FROM organization_roles role
+          WHERE role.id =
+            ${requirement.organizationRoleId}
+            AND role.organization_id =
+              ${organizationId}
+          RETURNING id;
+        `;
 
       if (!insertedRows[0]) {
         throw new Error(
